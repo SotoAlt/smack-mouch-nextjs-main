@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useAccount } from "wagmi";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useRouter } from "next/navigation"; // Add this import
+import GoldSwatterMinter from "~~/components/GoldSwatterMinter";
 
 type FlyType = 'normal' | 'large';
 
@@ -386,7 +387,7 @@ const Game: React.FC = () => {
           <h1 className="text-4xl mb-4">Game Over</h1>
           <p className="text-2xl mb-4">Final Score: {score}</p>
           <p className="text-2xl mb-4">Time Survived: {timeElapsed} seconds</p>
-          <div className="flex justify-center space-x-2">
+          <div className="flex justify-center space-x-2 mb-4">
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               onClick={resetGame}
@@ -406,6 +407,10 @@ const Game: React.FC = () => {
             >
               See Leaderboard
             </button>
+          </div>
+          {/* Add the Gold Swatter Minter component */}
+          <div className="mt-4">
+            <GoldSwatterMinter />
           </div>
         </div>
       </div>
