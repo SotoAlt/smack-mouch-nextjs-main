@@ -46,6 +46,8 @@ const Game: React.FC = () => {
   // Add this new state variable for the current swatter type
   const [currentSwatter, setCurrentSwatter] = useState<SwatterType>('normal');
 
+  const [lastCroissantPosition, setLastCroissantPosition] = useState({ x: 0, y: 0 });
+
   const { writeContractAsync: writeGameScoreAsync, isMining } = useScaffoldWriteContract("GameScore");
 
   const router = useRouter(); // Add this hook
@@ -56,6 +58,10 @@ const Game: React.FC = () => {
     functionName: "balanceOf",
     args: [connectedAddress],
   });
+
+  // Add these state variables
+  const [lastHitTime, setLastHitTime] = useState(0);
+  const cooldownTime = 500; // 500ms cooldown
 
   const handleSaveScore = async () => {
     try {
@@ -72,37 +78,37 @@ const Game: React.FC = () => {
   const createNewFly = useCallback(() => {
     const side = Math.floor(Math.random() * 4);
     const isBigFly = Math.random() < 0.2; // 20% chance for a big fly
-    const newFly: Fly = {
+    let x = 0, y = 0;
+
+    if (side === 0) {
+      x = Math.random() * window.innerWidth;
+      y = 0;
+    } else if (side === 1) {
+      x = window.innerWidth;
+      y = Math.random() * window.innerHeight;
+    } else if (side === 2) {
+      x = Math.random() * window.innerWidth;
+      y = window.innerHeight;
+    } else {
+      x = 0;
+      y = Math.random() * window.innerHeight;
+    }
+
+    return {
       id: uuidv4(),
       speed: (5 + Math.random() * 5) * speedMultiplier,
-      x: 0,
-      y: 0,
+      x,
+      y,
       angle: 0,
       type: isBigFly ? 'large' : 'normal',
       hits: 0,
     };
-
-    if (side === 0) {
-      newFly.x = Math.random() * window.innerWidth;
-      newFly.y = 0;
-    } else if (side === 1) {
-      newFly.x = window.innerWidth;
-      newFly.y = Math.random() * window.innerHeight;
-    } else if (side === 2) {
-      newFly.x = Math.random() * window.innerWidth;
-      newFly.y = window.innerHeight;
-    } else {
-      newFly.x = 0;
-      newFly.y = Math.random() * window.innerHeight;
-    }
-
-    return newFly;
   }, [speedMultiplier]);
 
   const spawnFly = useCallback(() => {
     setFlies(prev => {
       if (prev.filter(fly => !fly.dead).length < maxFlies) {
-        return [...prev, createNewFly()];
+        return [...prev, createNewFly() as Fly];
       }
       return prev;
     });
@@ -239,8 +245,9 @@ const Game: React.FC = () => {
 
             const jitterX = (Math.random() - 0.5) * 5;
             const jitterY = (Math.random() - 0.5) * 5;
-            const newX = fly.x + Math.cos(angle) * fly.speed * speedMultiplier + jitterX;
-            const newY = fly.y + Math.sin(angle) * fly.speed * speedMultiplier + jitterY;
+            const speedBoost = croissants.length === 1 ? 1.5 : 1;
+            const newX = fly.x + Math.cos(angle) * fly.speed * speedMultiplier * speedBoost + jitterX;
+            const newY = fly.y + Math.sin(angle) * fly.speed * speedMultiplier * speedBoost + jitterY;
 
             // Calculate the angle in degrees and adjust for the fly's orientation
             const angleDegrees = ((angle * 180) / Math.PI + 180) % 360;
@@ -256,7 +263,7 @@ const Game: React.FC = () => {
         // Ensure we always have the current maxFlies number of alive flies
         const aliveFliesCount = updatedFlies.filter(fly => !fly.dead).length;
         for (let i = aliveFliesCount; i < maxFlies; i++) {
-          updatedFlies.push(createNewFly());
+          updatedFlies.push(createNewFly() as Fly);
         }
 
         setAliveFliesCount(updatedFlies.filter(fly => !fly.dead).length);
@@ -264,6 +271,16 @@ const Game: React.FC = () => {
         return updatedFlies;
       });
     }, 50);
+
+    // Move the last croissant every 3 seconds
+    const moveCroissantInterval = setInterval(() => {
+      if (croissants.length === 1) {
+        const newX = Math.random() * (window.innerWidth - 30);
+        const newY = Math.random() * (window.innerHeight - 30);
+        setCroissants([{ ...croissants[0], x: newX, y: newY }]);
+        setLastCroissantPosition({ x: newX, y: newY });
+      }
+    }, 3000);
 
     // Cleanup any potential ghost images every second
     const cleanupInterval = setInterval(() => {
@@ -279,6 +296,7 @@ const Game: React.FC = () => {
 
     return () => {
       clearInterval(moveFlies);
+      clearInterval(moveCroissantInterval);
       clearInterval(cleanupInterval);
     };
   }, [croissants, gameStatus, speedMultiplier, flies, createNewFly, maxFlies]);
@@ -320,7 +338,7 @@ const Game: React.FC = () => {
         // Spawn new flies to maintain the current maxFlies number of alive flies
         const newFlies = [];
         for (let i = aliveFliesCount; i < maxFlies; i++) {
-          newFlies.push(createNewFly());
+          newFlies.push(createNewFly() as Fly);
         }
 
         // Update the score here, inside the setFlies callback
@@ -345,6 +363,11 @@ const Game: React.FC = () => {
   }, []);
 
   const handleClick = useCallback(() => {
+    const currentTime = Date.now();
+    if (currentTime - lastHitTime < cooldownTime) {
+      return; // Exit if cooldown hasn't elapsed
+    }
+
     const collisionBox = {
       left: cursorPosition.x - 100,
       right: cursorPosition.x + 100,
@@ -363,8 +386,9 @@ const Game: React.FC = () => {
 
     if (flyToKill) {
       handleFlyClick(flyToKill.id);
+      setLastHitTime(currentTime); // Update the last hit time
     }
-  }, [flies, cursorPosition, handleFlyClick]);
+  }, [flies, cursorPosition, handleFlyClick, lastHitTime, cooldownTime]);
 
   const handleTouchStart = useCallback((event: TouchEvent<HTMLDivElement>) => {
     setIsClicking(true);
@@ -561,6 +585,11 @@ const Game: React.FC = () => {
       {currentSwatter === 'gold' && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-black px-4 py-2 rounded-full z-10">
           Gold Swatter Active!
+        </div>
+      )}
+      {croissants.length === 1 && (
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-full z-10">
+          Last Croissant! Flies are faster!
         </div>
       )}
     </div>
