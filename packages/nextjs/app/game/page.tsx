@@ -4,7 +4,7 @@ import React, { TouchEvent, useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { v4 as uuidv4 } from "uuid";
 import { useAccount } from "wagmi";
-import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { useScaffoldWriteContract, useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 import { useRouter } from "next/navigation"; // Add this import
 import GoldSwatterMinter from "~~/components/GoldSwatterMinter";
 
@@ -23,6 +23,9 @@ type Fly = {
   hits: number;
 };
 
+// Add this new type definition
+type SwatterType = 'normal' | 'gold';
+
 const Game: React.FC = () => {
   const { address: connectedAddress } = useAccount();
   const [flies, setFlies] = useState<Fly[]>([]);
@@ -40,9 +43,19 @@ const Game: React.FC = () => {
   // Add this new state to keep track of alive flies
   const [aliveFliesCount, setAliveFliesCount] = useState(0);
 
+  // Add this new state variable for the current swatter type
+  const [currentSwatter, setCurrentSwatter] = useState<SwatterType>('normal');
+
   const { writeContractAsync: writeGameScoreAsync, isMining } = useScaffoldWriteContract("GameScore");
 
   const router = useRouter(); // Add this hook
+
+  // Add this hook to read from the GoldSwatter contract
+  const { data: hasGoldSwatter } = useScaffoldReadContract({
+    contractName: "GoldSwatter",
+    functionName: "balanceOf",
+    args: [connectedAddress],
+  });
 
   const handleSaveScore = async () => {
     try {
@@ -273,14 +286,29 @@ const Game: React.FC = () => {
   const handleFlyClick = useCallback(
     (id: string) => {
       setFlies(prev => {
+        let fliesKilled = 0;
         const updatedFlies = prev.map(fly => {
-          if (fly.id === id) {
-            const newHits = fly.hits + 1;
-            const maxHits = fly.type === 'large' ? 2 : 1;
-            if (newHits >= maxHits) {
+          if (fly.dead) return fly;
+
+          const isInCollisionBox = 
+            fly.x >= cursorPosition.x - 100 &&
+            fly.x <= cursorPosition.x + 100 &&
+            fly.y >= cursorPosition.y - 100 &&
+            fly.y <= cursorPosition.y + 100;
+
+          if (isInCollisionBox) {
+            if (currentSwatter === 'gold') {
+              // Gold swatter kills any fly in one hit
+              fliesKilled++;
               return { ...fly, dead: true, speed: 0, deadTime: Date.now() };
             } else {
-              return { ...fly, hits: newHits };
+              // Normal swatter
+              if (fly.type === 'normal' || (fly.type === 'large' && fly.hits === 1)) {
+                fliesKilled++;
+                return { ...fly, dead: true, speed: 0, deadTime: Date.now() };
+              } else if (fly.type === 'large' && fly.hits === 0) {
+                return { ...fly, hits: 1 };
+              }
             }
           }
           return fly;
@@ -295,11 +323,13 @@ const Game: React.FC = () => {
           newFlies.push(createNewFly());
         }
 
+        // Update the score here, inside the setFlies callback
+        setScore(prev => prev + fliesKilled);
+
         return [...updatedFlies, ...newFlies];
       });
-      setScore(prev => prev + 1);
     },
-    [maxFlies, createNewFly],
+    [maxFlies, createNewFly, currentSwatter, cursorPosition]
   );
 
   const handleMouseMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
@@ -352,17 +382,33 @@ const Game: React.FC = () => {
     handleClick();
   }, [handleClick]);
 
+  // Add this useEffect to set the swatter type based on the contract read result
+  useEffect(() => {
+    if (hasGoldSwatter && BigInt(hasGoldSwatter.toString()) > BigInt(0)) {
+      setCurrentSwatter('gold');
+    } else {
+      setCurrentSwatter('normal');
+    }
+  }, [hasGoldSwatter]);
+
+  // Modify the resetGame function to include swatter type reset
   const resetGame = useCallback(() => {
     setFlies([]);
     setCroissants([]);
     setScore(0);
     setGameStatus("playing");
     setTimeElapsed(0);
-    setSpeedMultiplier(1.25); // Reset speed multiplier to initial 25% increase
-    setMaxFlies(1); // Reset maxFlies to 1
-    setAliveFliesCount(0); // Reset aliveFliesCount to 0
+    setSpeedMultiplier(1.25);
+    setMaxFlies(1);
+    setAliveFliesCount(0);
+    // Set the swatter type based on the contract read result
+    if (hasGoldSwatter && BigInt(hasGoldSwatter.toString()) > BigInt(0)) {
+      setCurrentSwatter('gold');
+    } else {
+      setCurrentSwatter('normal');
+    }
     spawnCroissants();
-  }, [spawnCroissants]);
+  }, [spawnCroissants, hasGoldSwatter]);
 
   useEffect(() => {
     resetGame();
@@ -507,6 +553,16 @@ const Game: React.FC = () => {
       <div className="absolute bottom-4 right-4 bg-primary text-primary-content px-4 py-2 rounded-full z-10">
         Flies: {aliveFliesCount}/{maxFlies}
       </div>
+      {/* Add this somewhere in your JSX to display the current swatter type */}
+      <div className="absolute bottom-4 left-4 bg-primary text-primary-content px-4 py-2 rounded-full z-10">
+        Swatter: {currentSwatter === 'gold' ? 'Gold' : 'Normal'}
+      </div>
+      {/* You might want to add a visual indicator for the gold swatter */}
+      {currentSwatter === 'gold' && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-black px-4 py-2 rounded-full z-10">
+          Gold Swatter Active!
+        </div>
+      )}
     </div>
   );
 };
