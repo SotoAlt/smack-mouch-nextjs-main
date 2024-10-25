@@ -456,7 +456,7 @@ const Game: React.FC = () => {
           </div>
           {/* Add the Gold Swatter Minter component */}
           <div className="mt-4">
-            <GoldSwatterMinter />
+            <GoldSwatterMinter price={0.001} />
           </div>
         </div>
       </div>

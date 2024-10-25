@@ -3,7 +3,11 @@ import { useState } from "react";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import Image from 'next/image';
 
-const GoldSwatterMinter: React.FC = () => {
+interface GoldSwatterMinterProps {
+  price: number;
+}
+
+const GoldSwatterMinter: React.FC<GoldSwatterMinterProps> = ({ price }) => {
   const [tokenId, setTokenId] = useState<string>("");
 
   const { writeContractAsync: writeGoldSwatterAsync, isMining } = useScaffoldWriteContract("GoldSwatter");
@@ -12,6 +16,7 @@ const GoldSwatterMinter: React.FC = () => {
     try {
       const result = await writeGoldSwatterAsync({
         functionName: "mint",
+        value: BigInt(Math.floor(price * 1e18)),
       });
       console.log("Minting result:", result);
       
@@ -38,7 +43,7 @@ const GoldSwatterMinter: React.FC = () => {
             <Image src="/gold-swatter.png" alt="Gold Swatter" width={30} height={30} className="mr-2" />
             <span className="font-bold">Gold Swatter</span>
           </div>
-          <p>0.001 ETH</p>
+          <p>{price} ETH</p>
           <p>Kills 2 flies on one hit!</p>
         </div>
       </div>

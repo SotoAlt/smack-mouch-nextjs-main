@@ -5,14 +5,15 @@ const deployGoldSwatter: DeployFunction = async function (hre: HardhatRuntimeEnv
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
 
-  const deployResult = await deploy("GoldSwatter", {
+  // Add the constructor argument here
+  const constructorArg = "Your constructor argument here";
+
+  await deploy("GoldSwatter", {
     from: deployer,
-    args: [],
+    args: [constructorArg], // Pass the constructor argument in an array
     log: true,
     autoMine: true,
   });
-
-  console.log("GoldSwatter deployed to:", deployResult.address);
 };
 
 export default deployGoldSwatter;

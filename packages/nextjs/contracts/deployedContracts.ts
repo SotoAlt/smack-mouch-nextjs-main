@@ -145,7 +145,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     GoldSwatter: {
-      address: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+      address: "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
       abi: [
         {
           inputs: [
@@ -391,6 +391,19 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [],
+          name: "MINT_PRICE",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
           inputs: [
             {
               internalType: "address",
@@ -487,7 +500,7 @@ const deployedContracts = {
           inputs: [],
           name: "mint",
           outputs: [],
-          stateMutability: "nonpayable",
+          stateMutability: "payable",
           type: "function",
         },
         {
@@ -720,6 +733,13 @@ const deployedContracts = {
             },
           ],
           name: "transferOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "withdraw",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",
