@@ -237,7 +237,7 @@ const Game: React.FC = () => {
             const angle = Math.atan2(nearestCroissant.y - fly.y, nearestCroissant.x - fly.x);
             const distance = Math.hypot(nearestCroissant.x - fly.x, nearestCroissant.y - fly.y);
 
-            if (distance < 15 && !fly.eatingCroissant) {
+            if (distance < 37 && !fly.eatingCroissant) {
               // Start the eating process when the fly touches the croissant
               console.log("Fly started eating:", fly.id);
               return { ...fly, x: nearestCroissant.x, y: nearestCroissant.y, eatingCroissant: Date.now() };
@@ -510,12 +510,16 @@ const Game: React.FC = () => {
           style={{
             left: croissant.x,
             top: croissant.y,
-            width: 30,
-            height: 30,
-            backgroundColor: "yellow",
-            clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
           }}
-        />
+        >
+          <Image
+            src="/croissant.png"
+            alt="Croissant"
+            width={75}
+            height={75}
+            className="pointer-events-none"
+          />
+        </div>
       ))}
       {flies.map(fly => (
         <div
