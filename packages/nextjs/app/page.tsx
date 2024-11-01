@@ -29,6 +29,7 @@ const Home: NextPage = () => {
         </div>
         <div className="flex items-center flex-col flex-grow pt-10">
           <h1 className="text-center text-4xl font-bold mb-4">Smack Mouch</h1>
+          <p className="text-center text-lg mb-6">Click or Tap to SMACK all the Mouches and protect your croissants!</p>
           <div className="flex flex-col space-y-4">
             {!connectedAddress ? (
               <button onClick={handlePlayAsGuest} className="btn btn-primary">
@@ -41,7 +42,6 @@ const Home: NextPage = () => {
             )}
             <RainbowKitCustomConnectButton />
           </div>
-          {connectedAddress && <p className="mt-4">Connected Address: {connectedAddress}</p>}
         </div>
       </div>
     </>

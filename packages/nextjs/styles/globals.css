@@ -24,9 +24,18 @@ p {
 }
 
 .btn {
-  @apply shadow-md;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
 .btn.btn-ghost {
-  @apply shadow-none;
+  box-shadow: none;
+}
+
+@keyframes flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.animate-flash {
+  animation: flash 0.5s ease-in-out infinite;
 }

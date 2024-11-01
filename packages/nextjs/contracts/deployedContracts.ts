@@ -5,9 +5,9 @@
 import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
 const deployedContracts = {
-  31337: {
+  11155111: {
     GameScore: {
-      address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+      address: "0xd7999DB02BC211d03147C6f4deE91a61f990dd1b",
       abi: [
         {
           anonymous: false,
@@ -145,7 +145,7 @@ const deployedContracts = {
       inheritedFunctions: {},
     },
     GoldSwatter: {
-      address: "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
+      address: "0x2D4FaB93749625B16325e50716B282D6204DE23F",
       abi: [
         {
           inputs: [
@@ -764,7 +764,7 @@ const deployedContracts = {
       },
     },
     YourContract: {
-      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      address: "0xC88A8A76A77f718180Cd85869E063B5e0DdaB50A",
       abi: [
         {
           inputs: [

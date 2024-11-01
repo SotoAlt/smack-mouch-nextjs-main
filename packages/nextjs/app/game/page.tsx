@@ -63,6 +63,12 @@ const Game: React.FC = () => {
   const [lastHitTime, setLastHitTime] = useState(0);
   const cooldownTime = 500; // 500ms cooldown
 
+  // Add this new state for animation
+  const [isSwinging, setIsSwinging] = useState(false);
+
+  // Add this new state at the top of the component
+  const [eatingCroissantIds, setEatingCroissantIds] = useState<number[]>([]);
+
   const handleSaveScore = async () => {
     try {
       await writeGameScoreAsync({
@@ -77,7 +83,8 @@ const Game: React.FC = () => {
 
   const createNewFly = useCallback(() => {
     const side = Math.floor(Math.random() * 4);
-    const isBigFly = Math.random() < 0.2; // 20% chance for a big fly
+    // Only allow big flies after 10 seconds, and reduce chance to 10%
+    const isBigFly = timeElapsed > 10 && Math.random() < 0.1;
     let x = 0, y = 0;
 
     if (side === 0) {
@@ -103,7 +110,7 @@ const Game: React.FC = () => {
       type: isBigFly ? 'large' : 'normal',
       hits: 0,
     };
-  }, [speedMultiplier]);
+  }, [speedMultiplier, timeElapsed]);
 
   const spawnFly = useCallback(() => {
     setFlies(prev => {
@@ -167,10 +174,10 @@ const Game: React.FC = () => {
         setTimeElapsed(prev => prev + 1);
       }, 1000);
 
-      // Increase maxFlies every 3 seconds until it reaches 10
+      // Increase maxFlies every 5 seconds (instead of 3) until it reaches 8 (instead of 10)
       flyIncreaseTimer = setInterval(() => {
-        setMaxFlies(prev => Math.min(prev + 1, 10));
-      }, 3000); // This remains at 3000ms (3 seconds)
+        setMaxFlies(prev => Math.min(prev + 1, 8));
+      }, 5000); // Changed from 3000 to 5000ms
     }
 
     return () => {
@@ -183,10 +190,10 @@ const Game: React.FC = () => {
     const spawnInterval = setInterval(spawnFly, 1000);
 
     const speedIncreaseInterval = setInterval(() => {
-      setSpeedMultiplier(prev => prev * 1.15);
+      setSpeedMultiplier(prev => prev * 1.1); // Reduced from 1.15 to 1.1
       setShowSpeedIncrease(true);
       setTimeout(() => setShowSpeedIncrease(false), 1000);
-    }, 5000); // Changed from 2000 to 5000 (5 seconds)
+    }, 8000); // Changed from 5000 to 8000 (8 seconds)
 
     return () => {
       clearInterval(spawnInterval);
@@ -210,10 +217,16 @@ const Game: React.FC = () => {
               return fly;
             }
 
+            const nearestCroissant = croissants.reduce((closest, croissant) => {
+              const distanceToCurrent = Math.hypot(croissant.x - fly.x, croissant.y - fly.y);
+              const distanceToClosest = Math.hypot(closest.x - fly.x, closest.y - fly.y);
+              return distanceToCurrent < distanceToClosest ? croissant : closest;
+            }, croissants[0]);
+
             if (fly.eatingCroissant) {
-              // If the fly is eating a croissant, check if 0.5 seconds have passed
-              if (Date.now() - fly.eatingCroissant >= 500) {
-                // Remove the croissant after 0.5 seconds of eating
+              // Decrease from 2000 to 1000ms (1 second)
+              if (Date.now() - fly.eatingCroissant >= 1000) {
+                // Remove the croissant after 1 second of eating
                 setCroissants(prev => {
                   const newCroissants = prev.filter(c => !(Math.abs(c.x - fly.x) < 15 && Math.abs(c.y - fly.y) < 15));
                   if (newCroissants.length === 0) {
@@ -221,18 +234,15 @@ const Game: React.FC = () => {
                   }
                   return newCroissants;
                 });
-                // Reset the eatingCroissant property and allow the fly to move again
+                setEatingCroissantIds(prev => prev.filter(id => id !== nearestCroissant.id));
                 return { ...fly, eatingCroissant: undefined };
+              } else if (!eatingCroissantIds.includes(nearestCroissant.id)) {
+                // Add croissant ID to the flashing list when fly starts eating
+                setEatingCroissantIds(prev => [...prev, nearestCroissant.id]);
               }
               // If still eating, don't move the fly
               return fly;
             }
-
-            const nearestCroissant = croissants.reduce((closest, croissant) => {
-              const distanceToCurrent = Math.hypot(croissant.x - fly.x, croissant.y - fly.y);
-              const distanceToClosest = Math.hypot(closest.x - fly.x, closest.y - fly.y);
-              return distanceToCurrent < distanceToClosest ? croissant : closest;
-            }, croissants[0]);
 
             const angle = Math.atan2(nearestCroissant.y - fly.y, nearestCroissant.x - fly.x);
             const distance = Math.hypot(nearestCroissant.x - fly.x, nearestCroissant.y - fly.y);
@@ -316,14 +326,25 @@ const Game: React.FC = () => {
 
           if (isInCollisionBox) {
             if (currentSwatter === 'gold') {
-              // Gold swatter kills any fly in one hit
               fliesKilled++;
-              return { ...fly, dead: true, speed: 0, deadTime: Date.now() };
+              if (fly.eatingCroissant) {
+                const eatenCroissant = croissants.find(c => Math.abs(c.x - fly.x) < 15 && Math.abs(c.y - fly.y) < 15);
+                if (eatenCroissant) {
+                  setEatingCroissantIds(prev => prev.filter(id => id !== eatenCroissant.id));
+                }
+              }
+              return { ...fly, dead: true, speed: 0, deadTime: Date.now(), eatingCroissant: undefined };
             } else {
-              // Normal swatter
+              // Normal swatter logic...
               if (fly.type === 'normal' || (fly.type === 'large' && fly.hits === 1)) {
                 fliesKilled++;
-                return { ...fly, dead: true, speed: 0, deadTime: Date.now() };
+                if (fly.eatingCroissant) {
+                  const eatenCroissant = croissants.find(c => Math.abs(c.x - fly.x) < 15 && Math.abs(c.y - fly.y) < 15);
+                  if (eatenCroissant) {
+                    setEatingCroissantIds(prev => prev.filter(id => id !== eatenCroissant.id));
+                  }
+                }
+                return { ...fly, dead: true, speed: 0, deadTime: Date.now(), eatingCroissant: undefined };
               } else if (fly.type === 'large' && fly.hits === 0) {
                 return { ...fly, hits: 1 };
               }
@@ -332,22 +353,11 @@ const Game: React.FC = () => {
           return fly;
         });
 
-        // Count alive flies
-        const aliveFliesCount = updatedFlies.filter(fly => !fly.dead).length;
-
-        // Spawn new flies to maintain the current maxFlies number of alive flies
-        const newFlies = [];
-        for (let i = aliveFliesCount; i < maxFlies; i++) {
-          newFlies.push(createNewFly() as Fly);
-        }
-
-        // Update the score here, inside the setFlies callback
         setScore(prev => prev + fliesKilled);
-
-        return [...updatedFlies, ...newFlies];
+        return [...updatedFlies];
       });
     },
-    [maxFlies, createNewFly, currentSwatter, cursorPosition]
+    [maxFlies, createNewFly, currentSwatter, cursorPosition, croissants]
   );
 
   const handleMouseMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
@@ -365,8 +375,11 @@ const Game: React.FC = () => {
   const handleClick = useCallback(() => {
     const currentTime = Date.now();
     if (currentTime - lastHitTime < cooldownTime) {
-      return; // Exit if cooldown hasn't elapsed
+      return;
     }
+
+    setIsSwinging(true);
+    setTimeout(() => setIsSwinging(false), 50); // Changed from 100ms to 50ms for even faster animation
 
     const collisionBox = {
       left: cursorPosition.x - 100,
@@ -506,7 +519,9 @@ const Game: React.FC = () => {
       {croissants.map(croissant => (
         <div
           key={croissant.id}
-          className="absolute"
+          className={`absolute pointer-events-none ${
+            eatingCroissantIds.includes(croissant.id) ? 'animate-flash' : ''
+          }`}
           style={{
             left: croissant.x,
             top: croissant.y,
@@ -517,7 +532,9 @@ const Game: React.FC = () => {
             alt="Croissant"
             width={75}
             height={75}
-            className="pointer-events-none"
+            className={`pointer-events-none ${
+              eatingCroissantIds.includes(croissant.id) ? 'opacity-50' : ''
+            }`}
           />
         </div>
       ))}
@@ -539,7 +556,7 @@ const Game: React.FC = () => {
             alt="Fly"
             width={fly.type === 'large' ? 200 : 100}
             height={fly.type === 'large' ? 200 : 100}
-            className={`transition-opacity duration-1000 ${fly.dead ? "opacity-0" : "opacity-100"}`}
+            className={`transition-opacity duration-1000 pointer-events-none ${fly.dead ? "opacity-0" : "opacity-100"}`}
             style={{
               transform: `rotate(${fly.angle}deg) ${fly.angle > 90 && fly.angle < 270 ? "scaleY(-1)" : ""}`,
               transformOrigin: "center",
@@ -552,11 +569,11 @@ const Game: React.FC = () => {
         alt="Fly Swatter"
         width={687}
         height={163}
-        className="absolute pointer-events-none"
+        className="absolute pointer-events-none transition-transform duration-50"
         style={{
           left: cursorPosition.x - 80,
           top: cursorPosition.y - 80,
-          transform: "rotate(45deg)",
+          transform: `rotate(45deg) ${isSwinging ? 'rotate(-15deg) scale(0.95)' : ''}`,
           opacity: 0.75,
           transformOrigin: "80px 80px",
         }}
