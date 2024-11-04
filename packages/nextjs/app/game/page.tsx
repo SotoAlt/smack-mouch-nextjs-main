@@ -43,9 +43,6 @@ const Game: React.FC = () => {
   // Add this new state to keep track of alive flies
   const [aliveFliesCount, setAliveFliesCount] = useState(0);
 
-  // Add this new state variable for the current swatter type
-  const [currentSwatter, setCurrentSwatter] = useState<SwatterType>('normal');
-
   const [lastCroissantPosition, setLastCroissantPosition] = useState({ x: 0, y: 0 });
 
   const { writeContractAsync: writeGameScoreAsync, isMining } = useScaffoldWriteContract("GameScore");
@@ -57,7 +54,39 @@ const Game: React.FC = () => {
     contractName: "GoldSwatter",
     functionName: "balanceOf",
     args: [connectedAddress],
+    watch: true,
+    query: {
+      enabled: Boolean(connectedAddress),
+      staleTime: Infinity,
+      gcTime: Infinity,
+    }
   });
+
+  // Replace the current swatter state and effects with:
+  const [currentSwatter, setCurrentSwatter] = useState<SwatterType>('normal');
+
+  // Handle localStorage and connection state
+  useEffect(() => {
+    if (!connectedAddress) {
+      setCurrentSwatter('normal');
+      return;
+    }
+
+    const savedSwatter = localStorage.getItem('hasGoldSwatter');
+    if (savedSwatter === 'true') {
+      setCurrentSwatter('gold');
+    }
+  }, [connectedAddress]);
+
+  // Handle blockchain data
+  useEffect(() => {
+    if (!connectedAddress) return;
+
+    if (hasGoldSwatter && BigInt(hasGoldSwatter.toString()) > BigInt(0)) {
+      setCurrentSwatter('gold');
+      localStorage.setItem('hasGoldSwatter', 'true');
+    }
+  }, [connectedAddress, hasGoldSwatter]);
 
   // Add these state variables
   const [lastHitTime, setLastHitTime] = useState(0);
@@ -419,16 +448,7 @@ const Game: React.FC = () => {
     handleClick();
   }, [handleClick]);
 
-  // Add this useEffect to set the swatter type based on the contract read result
-  useEffect(() => {
-    if (hasGoldSwatter && BigInt(hasGoldSwatter.toString()) > BigInt(0)) {
-      setCurrentSwatter('gold');
-    } else {
-      setCurrentSwatter('normal');
-    }
-  }, [hasGoldSwatter]);
-
-  // Modify the resetGame function to include swatter type reset
+  // Remove the swatter check from resetGame - it's now handled by the useEffect above
   const resetGame = useCallback(() => {
     setFlies([]);
     setCroissants([]);
@@ -438,14 +458,8 @@ const Game: React.FC = () => {
     setSpeedMultiplier(1.25);
     setMaxFlies(1);
     setAliveFliesCount(0);
-    // Set the swatter type based on the contract read result
-    if (hasGoldSwatter && BigInt(hasGoldSwatter.toString()) > BigInt(0)) {
-      setCurrentSwatter('gold');
-    } else {
-      setCurrentSwatter('normal');
-    }
     spawnCroissants();
-  }, [spawnCroissants, hasGoldSwatter]);
+  }, [spawnCroissants]);
 
   useEffect(() => {
     resetGame();
@@ -565,8 +579,8 @@ const Game: React.FC = () => {
         </div>
       ))}
       <Image
-        src="/FLY_SWATTER.png"
-        alt="Fly Swatter"
+        src={currentSwatter === 'gold' ? "/GOLD_SWATTER.PNG" : "/FLY_SWATTER.png"}
+        alt={`${currentSwatter === 'gold' ? 'Gold' : 'Normal'} Fly Swatter`}
         width={687}
         height={163}
         className="absolute pointer-events-none transition-transform duration-50"
@@ -598,9 +612,19 @@ const Game: React.FC = () => {
       <div className="absolute bottom-4 right-4 bg-primary text-primary-content px-4 py-2 rounded-full z-10">
         Flies: {aliveFliesCount}/{maxFlies}
       </div>
-      {/* Add this somewhere in your JSX to display the current swatter type */}
+      {/* Modify the swatter type display */}
       <div className="absolute bottom-4 left-4 bg-primary text-primary-content px-4 py-2 rounded-full z-10">
         Swatter: {currentSwatter === 'gold' ? 'Gold' : 'Normal'}
+        {!connectedAddress && (
+          <span className="text-xs block">
+            Connect wallet to use Gold Swatter
+          </span>
+        )}
+        {connectedAddress && currentSwatter === 'normal' && (
+          <span className="text-xs block">
+            Get Gold Swatter NFT to upgrade
+          </span>
+        )}
       </div>
       {/* You might want to add a visual indicator for the gold swatter */}
       {currentSwatter === 'gold' && (
