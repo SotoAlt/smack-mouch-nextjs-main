@@ -579,7 +579,7 @@ const Game: React.FC = () => {
         </div>
       ))}
       <Image
-        src={currentSwatter === 'gold' ? "/GOLD_SWATTER.PNG" : "/FLY_SWATTER.png"}
+        src={currentSwatter === 'gold' ? "/gold_swatter.PNG" : "/fly_swatter.png"}
         alt={`${currentSwatter === 'gold' ? 'Gold' : 'Normal'} Fly Swatter`}
         width={687}
         height={163}
@@ -592,17 +592,6 @@ const Game: React.FC = () => {
           transformOrigin: "80px 80px",
         }}
       />
-      {isClicking && (
-        <div
-          className="absolute border-2 border-red-500 pointer-events-none"
-          style={{
-            left: cursorPosition.x - 100,
-            top: cursorPosition.y - 100,
-            width: 200,
-            height: 200,
-          }}
-        />
-      )}
       {showSpeedIncrease && (
         <div className="absolute top-12 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-black px-4 py-2 rounded-full">
           Speed Increased!

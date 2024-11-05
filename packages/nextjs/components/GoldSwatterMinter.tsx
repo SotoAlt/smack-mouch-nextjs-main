@@ -40,7 +40,7 @@ const GoldSwatterMinter: React.FC<GoldSwatterMinterProps> = ({ price }) => {
         </button>
         <div className="absolute z-10 w-48 p-2 mt-2 text-sm text-white bg-black rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 left-1/2 transform -translate-x-1/2">
           <div className="flex items-center mb-2">
-            <Image src="/GOLD_SWATTER.PNG" alt="Gold Swatter" width={30} height={30} className="mr-2" />
+            <Image src="/gold_swatter.PNG" alt="Gold Swatter" width={30} height={30} className="mr-2" />
             <span className="font-bold">Gold Swatter</span>
           </div>
           <p>{price} ETH</p>
