@@ -1,3 +1,11 @@
-Hiiii, this uses SE-2
+Hi! 
 
-SMACK TAHT MOUCH!
+This is a simple game made with the help of the SE-2 library.
+
+It uses Node.js, React, We
+
+You have to kill all the mouches and protect your croissants!
+
+Controls:
+Click or Tap the screen.
+
