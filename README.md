@@ -2,6 +2,8 @@
 
 A web-based mini game built with [Scaffold-ETH 2](https://github.com/scaffold-eth/scaffold-eth-2).
 
+Latest version is [here](https://nextjs-seven-liard-31.vercel.app/).
+
 ## 🎮 Game Overview
 
 Protect your precious croissants from the invading mouches (flies)! Click or tap the screen to swat them away.
