@@ -77,12 +77,6 @@ When reporting bugs, please include:
 - Screenshots or recordings
 - Browser/device information
 
-## Community
-
-Join our community:
-- GitHub Discussions
-- Discord Server (coming soon)
-- Twitter Updates
 
 ## License
 
