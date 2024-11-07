@@ -3,6 +3,7 @@
 A web-based mini game built with [Scaffold-ETH 2](https://github.com/scaffold-eth/scaffold-eth-2).
 
 Latest version is [here](https://nextjs-seven-liard-31.vercel.app/).
+Deployed on Sepolia Testnet.
 
 ## 🎮 Game Overview
 
