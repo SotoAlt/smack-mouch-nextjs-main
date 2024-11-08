@@ -28,8 +28,8 @@ For detailed environment setup, follow the [Scaffold-ETH 2 Documentation](https:
 
 1. Clone the repository
     ```bash
-    git clone https://github.com/yourusername/smack-mouch.git
-    cd smack-mouch
+    git clone https://github.com/SotoAlt/smack-mouch-nextjs-main.git
+    cd smack-mouch-nextjs-main
     ```
 2. Install dependencies
     ```bash
