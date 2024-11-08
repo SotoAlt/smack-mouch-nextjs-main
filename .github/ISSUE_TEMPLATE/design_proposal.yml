@@ -1,0 +1,36 @@
+name: 🎨 Design Proposal
+description: Suggest visual improvements for Smack Mouch
+title: "[DESIGN] "
+labels: ["design"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve the game's visuals!
+
+  - type: dropdown
+    id: design-type
+    attributes:
+      label: Type
+      options:
+        - UI/UX
+        - Animation
+        - Visual Assets
+        - Color Scheme
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What would you like to change or add?
+      placeholder: Describe your design idea...
+    validations:
+      required: true
+
+  - type: textarea
+    id: mockup
+    attributes:
+      label: Visual Reference
+      description: Add screenshots, mockups, or reference images 
