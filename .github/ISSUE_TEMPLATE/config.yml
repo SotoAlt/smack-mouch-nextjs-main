@@ -1,11 +1,81 @@
-blank_issues_enabled: false
+blank_issues_enabled: true
 contact_links:
-  - name: 🤔 Questions and Help
-    url: https://github.com/your-repo/discussions
-    about: Please use the discussions tab for questions and help
-  - name: 💡 Feature Requests
-    url: https://github.com/your-repo/discussions/new?category=ideas
-    about: Suggest new features or improvements in our discussions
-  - name: 📖 Documentation
-    url: https://docs.your-repo.com
-    about: Check our documentation for guides and references
+  - name: Ask Question
+    url: https://github.com/yourusername/smack-mouch/discussions/new?category=q-a
+    about: Ask questions and discuss with other community members
+  - name: Request Feature
+    url: https://github.com/yourusername/smack-mouch/discussions/new?category=ideas 
+    about: Requests features or brainstorm ideas for new functionality
+
+# Add a new design template
+issue_template:
+  - name: 🎨 Design Request
+    about: Suggest a design improvement or new visual element
+    title: "[DESIGN] "
+    labels: ["design", "enhancement"]
+    body:
+      - type: markdown
+        attributes:
+          value: |
+            Thanks for taking the time to suggest a design improvement! Please provide as much detail as possible.
+
+      - type: dropdown
+        id: design-type
+        attributes:
+          label: Design Type
+          description: What type of design change are you suggesting?
+          options:
+            - UI Enhancement
+            - Animation
+            - Visual Assets (Sprites/Images)
+            - Color Scheme
+            - Layout
+            - Typography
+            - Other
+        validations:
+          required: true
+
+      - type: textarea
+        id: current-design
+        attributes:
+          label: Current Design
+          description: Describe the current design (if applicable)
+          placeholder: "What does the current design look like?"
+
+      - type: textarea
+        id: proposed-design
+        attributes:
+          label: Proposed Design
+          description: Describe your design idea in detail
+          placeholder: "What changes would you like to see?"
+        validations:
+          required: true
+
+      - type: textarea
+        id: mockups
+        attributes:
+          label: Mockups or References
+          description: Add any mockups, sketches, or reference images that help explain your idea
+          placeholder: "Drag and drop images here, or provide links to references"
+
+      - type: textarea
+        id: rationale
+        attributes:
+          label: Design Rationale
+          description: Why would this design change improve the game?
+          placeholder: "Explain how this change would benefit users..."
+        validations:
+          required: true
+
+      - type: checkboxes
+        id: considerations
+        attributes:
+          label: Design Considerations
+          description: Please confirm you've considered these aspects
+          options:
+            - label: This design works on both mobile and desktop
+              required: true
+            - label: This design maintains accessibility standards
+              required: true
+            - label: This design fits the game's existing style
+              required: true
