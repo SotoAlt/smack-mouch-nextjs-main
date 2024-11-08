@@ -1,32 +1,99 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: 'bug'
-assignees: ''
+name: 🐛 Bug Report
+description: Create a report to help improve Smack Mouch
+title: "[BUG] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report! Please provide as much detail as possible to help us fix the issue.
 
----
+  - type: input
+    id: game-version
+    attributes:
+      label: Game Version
+      description: What version of Smack Mouch are you running?
+      placeholder: "e.g., v1.0.0"
+    validations:
+      required: true
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+  - type: dropdown
+    id: browsers
+    attributes:
+      label: Browser
+      description: What browser are you using?
+      multiple: true
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Other
+    validations:
+      required: true
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device Type
+      description: What type of device are you using?
+      options:
+        - Desktop
+        - Mobile
+        - Tablet
+    validations:
+      required: true
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Also tell us what you expected to happen
+      placeholder: "Describe the bug and what you expected to happen..."
+    validations:
+      required: true
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
 
-**Environment (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+  - type: textarea
+    id: game-state
+    attributes:
+      label: Game State
+      description: What was happening in the game when the bug occurred?
+      placeholder: |
+        - Score: 
+        - Number of flies: 
+        - Swatter type (Normal/Gold): 
+        - Connected wallet? (Yes/No):
+    validations:
+      required: false
 
-**Additional context**
-Add any other context about the problem here. 
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant console logs
+      description: Please copy and paste any relevant console logs. This will be automatically formatted.
+      render: shell
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our contribution guidelines
+      options:
+        - label: I have searched for similar issues before creating this one
+          required: true
+        - label: I have provided all the necessary information to understand the bug
+          required: true
