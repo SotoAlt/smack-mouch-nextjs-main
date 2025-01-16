@@ -3,9 +3,10 @@
 import React, { TouchEvent, useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+// Add this import
+import { soundManager } from "../../utils/sounds";
 import { v4 as uuidv4 } from "uuid";
 import { useAccount } from "wagmi";
-// Add this import
 import GoldSwatterMinter from "~~/components/GoldSwatterMinter";
 import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
@@ -198,9 +199,12 @@ const Game: React.FC = () => {
 
   useEffect(() => {
     if (gameStatus === "playing") {
+      soundManager.playMusic("music.wav");
       document.body.style.cursor = "none";
     } else {
+      soundManager.stopMusic();
       document.body.style.cursor = "default";
+      soundManager.playSound("win.wav");
     }
   }, [gameStatus]);
 
@@ -404,6 +408,7 @@ const Game: React.FC = () => {
   }, []);
 
   const handleMouseDown = useCallback(() => {
+    soundManager.playSound("clap.wav");
     setIsClicking(true);
   }, []);
 
