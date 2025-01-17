@@ -3,6 +3,7 @@
 import React, { TouchEvent, useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { v4 as uuidv4 } from "uuid";
 import { useAccount } from "wagmi";
 // Add this import
@@ -112,13 +113,36 @@ const Game: React.FC = () => {
     }
   };
 
+  const COOLDOWN_PERIOD = 10 * 60 * 1000; // 10 minutes in milliseconds
+
   const handleClaimReward = async () => {
     try {
       const amt = score / timeElapsed;
+
+      if (amt <= 0) {
+        toast.error("Reward amount is 0! Cannot claim reward.");
+        return;
+      }
+
+      const lastClaimTimestamp = localStorage.getItem("lastClaimTimestamp");
+      const currentTime = Date.now();
+
+      // Check if the user is within the cooldown period
+      if (lastClaimTimestamp && currentTime - parseInt(lastClaimTimestamp, 10) < COOLDOWN_PERIOD) {
+        const remainingTime = COOLDOWN_PERIOD - (currentTime - parseInt(lastClaimTimestamp, 10));
+        const minutes = Math.floor(remainingTime / 1000 / 60);
+        const seconds = Math.floor((remainingTime / 1000) % 60);
+
+        toast.error(`Please wait ${minutes}m ${seconds}s before claiming again!`);
+        return;
+      }
+
       await writeMouchDropsAsync({
         functionName: "disburse",
         args: [connectedAddress, BigInt(amt * 10 ** 18)],
       });
+
+      localStorage.setItem("lastClaimTimestamp", currentTime.toString());
       console.log("Reward claimed successfully!");
     } catch (error) {
       console.error("Error claiming reward:", error);
@@ -500,6 +524,7 @@ const Game: React.FC = () => {
           <h1 className="mb-4 text-4xl">Game Over</h1>
           <p className="mb-4 text-2xl">Final Score: {score}</p>
           <p className="mb-4 text-2xl">Time Survived: {timeElapsed} seconds</p>
+          <p className="mb-4 text-2xl">Your Reward: {(score / timeElapsed).toFixed(4)} DMON</p>
           <div className="flex justify-center mb-4 space-x-2">
             <button
               className="px-4 py-2 font-bold text-white bg-blue-500 rounded hover:bg-blue-700"
@@ -515,7 +540,7 @@ const Game: React.FC = () => {
               {isMining ? "Saving..." : "Save Score"}
             </button>
             <button
-              className="px-4 py-2 font-bold text-white bg-green-500 rounded hover:bg-green-700"
+              className="px-4 py-2 font-bold text-white bg-orange-500 rounded hover:bg-orange-700"
               onClick={handleClaimReward}
               disabled={isClaiming}
             >
@@ -598,7 +623,7 @@ const Game: React.FC = () => {
         </div>
       ))}
       <Image
-        src={currentSwatter === "gold" ? "/gold_swatter.PNG" : "/fly_swatter.png"}
+        src={currentSwatter === "gold" ? "/GOLD_SWATTER.PNG" : "/FLY_SWATTER.png"}
         alt={`${currentSwatter === "gold" ? "Gold" : "Normal"} Fly Swatter`}
         width={687}
         height={163}
