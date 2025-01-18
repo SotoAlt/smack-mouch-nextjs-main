@@ -524,8 +524,8 @@ const Game: React.FC = () => {
           <h1 className="mb-4 text-4xl">Game Over</h1>
           <p className="mb-4 text-2xl">Final Score: {score}</p>
           <p className="mb-4 text-2xl">Time Survived: {timeElapsed} seconds</p>
-          <p className="mb-4 text-2xl">Your Reward: {(score / timeElapsed).toFixed(4)} DMON</p>
-          <div className="flex justify-center mb-4 space-x-2">
+          <p className="mb-4 text-2xl">Your Reward: {(score / timeElapsed).toFixed(2)} DMON</p>
+          <div className="grid justify-center grid-cols-2 gap-3 mb-4 md:flex">
             <button
               className="px-4 py-2 font-bold text-white bg-blue-500 rounded hover:bg-blue-700"
               onClick={resetGame}
