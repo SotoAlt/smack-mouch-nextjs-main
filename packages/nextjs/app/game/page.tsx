@@ -579,7 +579,7 @@ const Game: React.FC = () => {
         </div>
       ))}
       <Image
-        src={currentSwatter === 'gold' ? "/gold_swatter.PNG" : "/fly_swatter.png"}
+        src={currentSwatter === 'gold' ? "/GOLD_SWATTER.png" : "/FLY_SWATTER.png"}
         alt={`${currentSwatter === 'gold' ? 'Gold' : 'Normal'} Fly Swatter`}
         width={687}
         height={163}
