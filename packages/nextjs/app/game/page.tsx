@@ -2,13 +2,14 @@
 
 import React, { TouchEvent, useCallback, useEffect, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { useAccount } from "wagmi";
-import { useScaffoldWriteContract, useScaffoldReadContract } from "~~/hooks/scaffold-eth";
-import { useRouter } from "next/navigation"; // Add this import
+// Add this import
 import GoldSwatterMinter from "~~/components/GoldSwatterMinter";
+import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
-type FlyType = 'normal' | 'large';
+type FlyType = "normal" | "large";
 
 type Fly = {
   id: string;
@@ -24,7 +25,7 @@ type Fly = {
 };
 
 // Add this new type definition
-type SwatterType = 'normal' | 'gold';
+type SwatterType = "normal" | "gold";
 
 const Game: React.FC = () => {
   const { address: connectedAddress } = useAccount();
@@ -59,22 +60,42 @@ const Game: React.FC = () => {
       enabled: Boolean(connectedAddress),
       staleTime: Infinity,
       gcTime: Infinity,
-    }
+    },
   });
+  // Cursor management
+  useEffect(() => {
+    const gameElement = document.querySelector(".game-area") as HTMLDivElement;
+
+    if (!gameElement) return;
+
+    switch (gameStatus) {
+      case "playing":
+        gameElement.style.cursor = "none";
+        break;
+      case "lost":
+        gameElement.style.cursor = "default";
+        break;
+    }
+
+    return () => {
+      // Reset cursor on cleanup
+      gameElement.style.cursor = "default";
+    };
+  }, [gameStatus]);
 
   // Replace the current swatter state and effects with:
-  const [currentSwatter, setCurrentSwatter] = useState<SwatterType>('normal');
+  const [currentSwatter, setCurrentSwatter] = useState<SwatterType>("normal");
 
   // Handle localStorage and connection state
   useEffect(() => {
     if (!connectedAddress) {
-      setCurrentSwatter('normal');
+      setCurrentSwatter("normal");
       return;
     }
 
-    const savedSwatter = localStorage.getItem('hasGoldSwatter');
-    if (savedSwatter === 'true') {
-      setCurrentSwatter('gold');
+    const savedSwatter = localStorage.getItem("hasGoldSwatter");
+    if (savedSwatter === "true") {
+      setCurrentSwatter("gold");
     }
   }, [connectedAddress]);
 
@@ -83,8 +104,8 @@ const Game: React.FC = () => {
     if (!connectedAddress) return;
 
     if (hasGoldSwatter && BigInt(hasGoldSwatter.toString()) > BigInt(0)) {
-      setCurrentSwatter('gold');
-      localStorage.setItem('hasGoldSwatter', 'true');
+      setCurrentSwatter("gold");
+      localStorage.setItem("hasGoldSwatter", "true");
     }
   }, [connectedAddress, hasGoldSwatter]);
 
@@ -114,7 +135,8 @@ const Game: React.FC = () => {
     const side = Math.floor(Math.random() * 4);
     // Only allow big flies after 10 seconds, and reduce chance to 10%
     const isBigFly = timeElapsed > 10 && Math.random() < 0.1;
-    let x = 0, y = 0;
+    let x = 0,
+      y = 0;
 
     if (side === 0) {
       x = Math.random() * window.innerWidth;
@@ -136,7 +158,7 @@ const Game: React.FC = () => {
       x,
       y,
       angle: 0,
-      type: isBigFly ? 'large' : 'normal',
+      type: isBigFly ? "large" : "normal",
       hits: 0,
     };
   }, [speedMultiplier, timeElapsed]);
@@ -347,14 +369,14 @@ const Game: React.FC = () => {
         const updatedFlies = prev.map(fly => {
           if (fly.dead) return fly;
 
-          const isInCollisionBox = 
+          const isInCollisionBox =
             fly.x >= cursorPosition.x - 100 &&
             fly.x <= cursorPosition.x + 100 &&
             fly.y >= cursorPosition.y - 100 &&
             fly.y <= cursorPosition.y + 100;
 
           if (isInCollisionBox) {
-            if (currentSwatter === 'gold') {
+            if (currentSwatter === "gold") {
               fliesKilled++;
               if (fly.eatingCroissant) {
                 const eatenCroissant = croissants.find(c => Math.abs(c.x - fly.x) < 15 && Math.abs(c.y - fly.y) < 15);
@@ -365,7 +387,7 @@ const Game: React.FC = () => {
               return { ...fly, dead: true, speed: 0, deadTime: Date.now(), eatingCroissant: undefined };
             } else {
               // Normal swatter logic...
-              if (fly.type === 'normal' || (fly.type === 'large' && fly.hits === 1)) {
+              if (fly.type === "normal" || (fly.type === "large" && fly.hits === 1)) {
                 fliesKilled++;
                 if (fly.eatingCroissant) {
                   const eatenCroissant = croissants.find(c => Math.abs(c.x - fly.x) < 15 && Math.abs(c.y - fly.y) < 15);
@@ -374,7 +396,7 @@ const Game: React.FC = () => {
                   }
                 }
                 return { ...fly, dead: true, speed: 0, deadTime: Date.now(), eatingCroissant: undefined };
-              } else if (fly.type === 'large' && fly.hits === 0) {
+              } else if (fly.type === "large" && fly.hits === 0) {
                 return { ...fly, hits: 1 };
               }
             }
@@ -386,7 +408,7 @@ const Game: React.FC = () => {
         return [...updatedFlies];
       });
     },
-    [maxFlies, createNewFly, currentSwatter, cursorPosition, croissants]
+    [maxFlies, createNewFly, currentSwatter, cursorPosition, croissants],
   );
 
   const handleMouseMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
@@ -474,7 +496,7 @@ const Game: React.FC = () => {
   }, [connectedAddress]);
 
   const handleSeeLeaderboard = useCallback(() => {
-    router.push('/leaderboard');
+    router.push("/leaderboard");
   }, [router]);
 
   if (gameStatus !== "playing") {
@@ -516,7 +538,7 @@ const Game: React.FC = () => {
 
   return (
     <div
-      className="relative w-full h-screen overflow-hidden"
+      className="relative w-full h-screen overflow-hidden game-area"
       onMouseMove={handleMouseMove}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
@@ -533,9 +555,7 @@ const Game: React.FC = () => {
       {croissants.map(croissant => (
         <div
           key={croissant.id}
-          className={`absolute pointer-events-none ${
-            eatingCroissantIds.includes(croissant.id) ? 'animate-flash' : ''
-          }`}
+          className={`absolute pointer-events-none ${eatingCroissantIds.includes(croissant.id) ? "animate-flash" : ""}`}
           style={{
             left: croissant.x,
             top: croissant.y,
@@ -546,9 +566,7 @@ const Game: React.FC = () => {
             alt="Croissant"
             width={75}
             height={75}
-            className={`pointer-events-none ${
-              eatingCroissantIds.includes(croissant.id) ? 'opacity-50' : ''
-            }`}
+            className={`pointer-events-none ${eatingCroissantIds.includes(croissant.id) ? "opacity-50" : ""}`}
           />
         </div>
       ))}
@@ -557,10 +575,10 @@ const Game: React.FC = () => {
           key={`fly-container-${fly.id}`}
           className="absolute pointer-events-none"
           style={{
-            left: fly.x - (fly.type === 'large' ? 100 : 50),
-            top: fly.y - (fly.type === 'large' ? 100 : 50),
-            width: fly.type === 'large' ? 200 : 100,
-            height: fly.type === 'large' ? 200 : 100,
+            left: fly.x - (fly.type === "large" ? 100 : 50),
+            top: fly.y - (fly.type === "large" ? 100 : 50),
+            width: fly.type === "large" ? 200 : 100,
+            height: fly.type === "large" ? 200 : 100,
           }}
         >
           <Image
@@ -568,8 +586,8 @@ const Game: React.FC = () => {
             data-fly-id={fly.id}
             src={fly.dead ? "/mouch_dead.png" : fly.eatingCroissant ? "/mouch-eating.png" : "/mouch-1.png"}
             alt="Fly"
-            width={fly.type === 'large' ? 200 : 100}
-            height={fly.type === 'large' ? 200 : 100}
+            width={fly.type === "large" ? 200 : 100}
+            height={fly.type === "large" ? 200 : 100}
             className={`transition-opacity duration-1000 pointer-events-none ${fly.dead ? "opacity-0" : "opacity-100"}`}
             style={{
               transform: `rotate(${fly.angle}deg) ${fly.angle > 90 && fly.angle < 270 ? "scaleY(-1)" : ""}`,
@@ -587,7 +605,7 @@ const Game: React.FC = () => {
         style={{
           left: cursorPosition.x - 80,
           top: cursorPosition.y - 80,
-          transform: `rotate(45deg) ${isSwinging ? 'rotate(-15deg) scale(0.95)' : ''}`,
+          transform: `rotate(45deg) ${isSwinging ? "rotate(-15deg) scale(0.95)" : ""}`,
           opacity: 0.75,
           transformOrigin: "80px 80px",
         }}
@@ -603,20 +621,14 @@ const Game: React.FC = () => {
       </div>
       {/* Modify the swatter type display */}
       <div className="absolute bottom-4 left-4 bg-primary text-primary-content px-4 py-2 rounded-full z-10">
-        Swatter: {currentSwatter === 'gold' ? 'Gold' : 'Normal'}
-        {!connectedAddress && (
-          <span className="text-xs block">
-            Connect wallet to use Gold Swatter
-          </span>
-        )}
-        {connectedAddress && currentSwatter === 'normal' && (
-          <span className="text-xs block">
-            Get Gold Swatter NFT to upgrade
-          </span>
+        Swatter: {currentSwatter === "gold" ? "Gold" : "Normal"}
+        {!connectedAddress && <span className="text-xs block">Connect wallet to use Gold Swatter</span>}
+        {connectedAddress && currentSwatter === "normal" && (
+          <span className="text-xs block">Get Gold Swatter NFT to upgrade</span>
         )}
       </div>
       {/* You might want to add a visual indicator for the gold swatter */}
-      {currentSwatter === 'gold' && (
+      {currentSwatter === "gold" && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-black px-4 py-2 rounded-full z-10">
           Gold Swatter Active!
         </div>
