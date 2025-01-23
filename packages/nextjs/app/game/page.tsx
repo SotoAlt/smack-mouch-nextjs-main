@@ -137,13 +137,18 @@ const Game: React.FC = () => {
         return;
       }
 
-      await writeMouchDropsAsync({
-        functionName: "disburse",
-        args: [connectedAddress, BigInt(amt * 10 ** 18)],
-      });
-
-      localStorage.setItem("lastClaimTimestamp", currentTime.toString());
-      console.log("Reward claimed successfully!");
+      await writeMouchDropsAsync(
+        {
+          functionName: "disburse",
+          args: [connectedAddress, BigInt(amt * 10 ** 18)],
+        },
+        {
+          onBlockConfirmation: txnReceipt => {
+            localStorage.setItem("lastClaimTimestamp", currentTime.toString());
+            console.log("Reward claimed successfully!", txnReceipt);
+          },
+        },
+      );
     } catch (error) {
       console.error("Error claiming reward:", error);
     }
