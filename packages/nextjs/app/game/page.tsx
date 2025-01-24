@@ -146,6 +146,7 @@ const Game: React.FC = () => {
           onBlockConfirmation: txnReceipt => {
             localStorage.setItem("lastClaimTimestamp", currentTime.toString());
             console.log("Reward claimed successfully!", txnReceipt);
+            setScore(0);
           },
         },
       );
