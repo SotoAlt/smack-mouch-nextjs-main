@@ -3,13 +3,14 @@
 A web-based mini game built with [Scaffold-ETH 2](https://github.com/scaffold-eth/scaffold-eth-2).
 
 Latest version is [here](https://nextjs-seven-liard-31.vercel.app/).
-Deployed on Sepolia Testnet.
+Deployed on Monad Testnet.
 
 ## 🎮 Game Overview
 
 Protect your precious croissants from the invading mouches (flies)! Click or tap the screen to swat them away.
 
 ### Controls
+
 - **Click/Tap**: Swat flies
 - **Special**: Unlock the Golden Swatter NFT for enhanced swatting power!
 
@@ -18,6 +19,7 @@ Protect your precious croissants from the invading mouches (flies)! Click or tap
 ### Prerequisites
 
 Before you begin, ensure you have the following installed:
+
 - Node.js (>= v18.18)
 - Yarn (v1 or v2+)
 - Git
@@ -27,19 +29,20 @@ For detailed environment setup, follow the [Scaffold-ETH 2 Documentation](https:
 ### Installation
 
 1. Clone the repository
-    ```bash
-    git clone https://github.com/SotoAlt/smack-mouch-nextjs-main.git
-    cd smack-mouch-nextjs-main
-    ```
+   ```bash
+   git clone https://github.com/SotoAlt/smack-mouch-nextjs-main.git
+   cd smack-mouch-nextjs-main
+   ```
 2. Install dependencies
-    ```bash
-    yarn install
-    ```
+
+   ```bash
+   yarn install
+   ```
 
 3. Start the development server
-    ```bash
-    yarn start  
-    ```
+   ```bash
+   yarn start
+   ```
 
 ## 🤝 Contributing
 
@@ -52,6 +55,7 @@ Contributions are always welcome! Here's how you can help:
 5. Open a Pull Request
 
 Please make sure to:
+
 - Open an issue first to discuss proposed changes
 - Follow the existing code style
 - Update documentation as needed
@@ -60,6 +64,7 @@ Please make sure to:
 ## 🐛 Bug Reports
 
 Found a bug? Please use our bug report template when creating an issue and include:
+
 - Detailed description of the issue
 - Steps to reproduce
 - Expected behavior

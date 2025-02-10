@@ -1,0 +1,36 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/MouchDrops.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract MouchDrops {\n\taddress public owner;\n\tuint256 public cooldownPeriod = 10 minutes;\n\tuint256 public maxDisbursement = 30 ether;\n\tmapping(address => uint256) public lastRequestTime;\n\tmapping(uint256 => bool) private usedNonces; // ✅ Prevent replay attacks with nonce\n\n\tevent EtherReceived(address indexed sender, uint256 amount);\n\tevent EtherDisbursed(address indexed recipient, uint256 amount);\n\tevent CooldownPeriodUpdated(uint256 newCooldownPeriod);\n\tevent MaxDisbursementUpdated(uint256 newMaxDisbursement);\n\tevent OwnerWithdraw(address indexed owner, uint256 amount);\n\n\tmodifier onlyOwner() {\n\t\trequire(msg.sender == owner, \"Caller is not the owner\");\n\t\t_;\n\t}\n\n\tconstructor() {\n\t\towner = msg.sender;\n\t}\n\n\treceive() external payable {\n\t\temit EtherReceived(msg.sender, msg.value);\n\t}\n\n\tfunction disburse(\n\t\taddress payable recipient,\n\t\tuint256 amount,\n\t\tuint256 nonce,\n\t\tbytes memory signature\n\t) external {\n\t\trequire(recipient != address(0), \"Invalid recipient\");\n\t\trequire(amount > 0 && amount <= maxDisbursement, \"Invalid amount\");\n\t\trequire(\n\t\t\taddress(this).balance >= amount,\n\t\t\t\"Insufficient contract balance\"\n\t\t);\n\t\trequire(\n\t\t\tblock.timestamp >= lastRequestTime[msg.sender] + cooldownPeriod,\n\t\t\t\"Cooldown period not expired\"\n\t\t);\n\t\trequire(!usedNonces[nonce], \"Nonce already used\"); // ✅ Prevent replay attacks\n\n\t\t// ✅ Step 1: Verify the signature\n\t\trequire(\n\t\t\tverifySignature(recipient, amount, nonce, signature),\n\t\t\t\"Invalid signature\"\n\t\t);\n\n\t\t// ✅ Step 2: Prevent replay attacks\n\t\tusedNonces[nonce] = true;\n\t\tlastRequestTime[msg.sender] = block.timestamp;\n\n\t\t// ✅ Step 3: Send Ether to the recipient\n\t\t(bool sent, ) = recipient.call{ value: amount }(\"\");\n\t\trequire(sent, \"Failed to disburse rewards\");\n\n\t\temit EtherDisbursed(recipient, amount);\n\t}\n\n\tfunction verifySignature(\n\t\taddress recipient,\n\t\tuint256 amount,\n\t\tuint256 nonce,\n\t\tbytes memory _signature\n\t) public view returns (bool) {\n\t\tbytes32 messageHash = getMessageHash(recipient, amount, nonce);\n\t\tbytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);\n\n\t\treturn recoverSigner(ethSignedMessageHash, _signature) == owner;\n\t}\n\n\tfunction getMessageHash(\n\t\taddress recipient,\n\t\tuint256 amount,\n\t\tuint256 nonce\n\t) public view returns (bytes32) {\n\t\treturn\n\t\t\tkeccak256(abi.encodePacked(recipient, amount, nonce, msg.sender));\n\t}\n\n\tfunction getEthSignedMessageHash(\n\t\tbytes32 _messageHash\n\t) public pure returns (bytes32) {\n\t\treturn\n\t\t\tkeccak256(\n\t\t\t\tabi.encodePacked(\n\t\t\t\t\t\"\\x19Ethereum Signed Message:\\n32\",\n\t\t\t\t\t_messageHash\n\t\t\t\t)\n\t\t\t);\n\t}\n\n\tfunction recoverSigner(\n\t\tbytes32 _ethSignedMessageHash,\n\t\tbytes memory _signature\n\t) public pure returns (address) {\n\t\t(bytes32 r, bytes32 s, uint8 v) = _splitSignature(_signature);\n\t\treturn ecrecover(_ethSignedMessageHash, v, r, s);\n\t}\n\n\tfunction _splitSignature(\n\t\tbytes memory _signature\n\t) internal pure returns (bytes32 r, bytes32 s, uint8 v) {\n\t\trequire(_signature.length == 65, \"Invalid signature length\");\n\n\t\tassembly {\n\t\t\tr := mload(add(_signature, 32))\n\t\t\ts := mload(add(_signature, 64))\n\t\t\tv := byte(0, mload(add(_signature, 96)))\n\t\t}\n\n\t\trequire(v == 27 || v == 28, \"Invalid v value\");\n\t}\n\n\tfunction setCooldownPeriod(uint256 newCooldownPeriod) external onlyOwner {\n\t\tcooldownPeriod = newCooldownPeriod;\n\t\temit CooldownPeriodUpdated(newCooldownPeriod);\n\t}\n\n\tfunction setMaxDisbursement(uint256 newMaxDisbursement) external onlyOwner {\n\t\trequire(\n\t\t\tnewMaxDisbursement > 0,\n\t\t\t\"Max disbursement must be greater than zero\"\n\t\t);\n\t\tmaxDisbursement = newMaxDisbursement;\n\t\temit MaxDisbursementUpdated(newMaxDisbursement);\n\t}\n\n\tfunction withdrawAll() external onlyOwner {\n\t\tuint256 contractBalance = address(this).balance;\n\t\trequire(contractBalance > 0, \"No funds to withdraw\");\n\n\t\t(bool sent, ) = owner.call{ value: contractBalance }(\"\");\n\t\trequire(sent, \"Failed to withdraw funds\");\n\n\t\temit OwnerWithdraw(owner, contractBalance);\n\t}\n\n\tfunction transferOwnership(address newOwner) external onlyOwner {\n\t\trequire(newOwner != address(0), \"New owner cannot be zero address\");\n\t\towner = newOwner;\n\t}\n}\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "evmVersion": "paris",
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

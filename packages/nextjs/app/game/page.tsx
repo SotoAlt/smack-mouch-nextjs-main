@@ -39,6 +39,7 @@ const Game: React.FC = () => {
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [isClicking, setIsClicking] = useState(false);
   const [maxFlies, setMaxFlies] = useState(1); // Start with 1 fly
+  const [isClaimingReward, setIsClaimingReward] = useState(false);
 
   const [showSpeedIncrease, setShowSpeedIncrease] = useState(false);
 
@@ -48,7 +49,6 @@ const Game: React.FC = () => {
   const [lastCroissantPosition, setLastCroissantPosition] = useState({ x: 0, y: 0 });
 
   const { writeContractAsync: writeGameScoreAsync, isMining } = useScaffoldWriteContract("GameScore");
-  const { writeContractAsync: writeMouchDropsAsync, isMining: isClaiming } = useScaffoldWriteContract("MouchDrops");
 
   const router = useRouter(); // Add this hook
 
@@ -117,10 +117,18 @@ const Game: React.FC = () => {
 
   const handleClaimReward = async () => {
     try {
+      if (!connectedAddress) {
+        toast.error("No connected wallet!");
+        return;
+      }
+
+      setIsClaimingReward(true);
+
       const amt = score / timeElapsed;
 
       if (amt <= 0) {
         toast.error("Reward amount is 0! Cannot claim reward.");
+        setIsClaimingReward(false);
         return;
       }
 
@@ -134,24 +142,40 @@ const Game: React.FC = () => {
         const seconds = Math.floor((remainingTime / 1000) % 60);
 
         toast.error(`Please wait ${minutes}m ${seconds}s before claiming again!`);
+        setIsClaimingReward(false);
         return;
       }
 
-      await writeMouchDropsAsync(
-        {
-          functionName: "disburse",
-          args: [connectedAddress, BigInt(amt * 10 ** 18)],
-        },
-        {
-          onBlockConfirmation: txnReceipt => {
-            localStorage.setItem("lastClaimTimestamp", currentTime.toString());
-            console.log("Reward claimed successfully!", txnReceipt);
-            setScore(0);
-          },
-        },
-      );
+      // Get disburse data from backend
+      const response = await fetch("/api/disburse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          connectedAddress: connectedAddress,
+          amount: amt.toString(),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorMsg = await response.json();
+        console.error(errorMsg);
+        toast.error(errorMsg?.error);
+        setIsClaimingReward(false);
+        return;
+      }
+
+      //can also destructure txHash from this
+      const { success } = await response.json();
+
+      if (success) {
+        localStorage.setItem("lastClaimTimestamp", currentTime.toString());
+        setScore(0);
+        toast.success("Reward claimed successfully");
+      }
+      setIsClaimingReward(false);
     } catch (error) {
       console.error("Error claiming reward:", error);
+      setIsClaimingReward(false);
     }
   };
 
@@ -548,9 +572,9 @@ const Game: React.FC = () => {
             <button
               className="px-4 py-2 font-bold text-white bg-orange-500 rounded hover:bg-orange-700"
               onClick={handleClaimReward}
-              disabled={isClaiming}
+              disabled={isClaimingReward}
             >
-              {isClaiming ? "Claiming..." : "Claim Reward"}
+              {isClaimingReward ? "Claiming..." : "Claim Reward"}
             </button>
             <button
               className="px-4 py-2 font-bold text-white bg-purple-500 rounded hover:bg-purple-700"
