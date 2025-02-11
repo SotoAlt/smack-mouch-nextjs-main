@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 contract MouchDrops {
 	address public owner;
+	address public admin;
 	uint256 public cooldownPeriod = 10 minutes;
 	uint256 public maxDisbursement = 30 ether;
 	mapping(address => uint256) public lastRequestTime;
@@ -10,23 +11,33 @@ contract MouchDrops {
 	event EtherReceived(address indexed sender, uint256 amount);
 	event OwnerWithdraw(address indexed owner, uint256 amount);
 
+	constructor(address _admin) {
+		owner = msg.sender;
+		admin = _admin;
+	}
+
 	modifier onlyOwner() {
 		require(msg.sender == owner, "Caller is not the owner");
 		_;
 	}
 
-	constructor() {
-		owner = msg.sender;
+	modifier onlyAdmin() {
+		require(msg.sender == admin, "Not authorized!");
+		_;
 	}
 
 	receive() external payable {
 		emit EtherReceived(msg.sender, msg.value);
 	}
 
+	function updateAdmin(address _newAdmin) external onlyOwner {
+		admin = _newAdmin;
+	}
+
 	function disburse(
 		address payable recipient,
 		uint256 amount
-	) external onlyOwner {
+	) external onlyAdmin {
 		require(recipient != address(0), "Invalid recipient");
 		require(amount > 0 && amount <= maxDisbursement, "Invalid amount");
 		require(
@@ -34,10 +45,10 @@ contract MouchDrops {
 			"Insufficient contract balance"
 		);
 		require(
-			block.timestamp >= lastRequestTime[msg.sender] + cooldownPeriod,
+			block.timestamp >= lastRequestTime[recipient] + cooldownPeriod,
 			"Cooldown period not yet expired"
 		);
-		lastRequestTime[msg.sender] = block.timestamp;
+		lastRequestTime[recipient] = block.timestamp;
 
 		// ✅ Send Ether to the recipient
 		(bool sent, ) = recipient.call{ value: amount }("");

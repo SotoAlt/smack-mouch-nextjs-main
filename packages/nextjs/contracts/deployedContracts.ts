@@ -764,10 +764,16 @@ const deployedContracts = {
       },
     },
     MouchDrops: {
-      address: "0x75B36BDC06d5580c0f38b16Ad69A06BddcFeA026",
+      address: "0x3b146Ac31c76A80519eC14443FCecDE92b8aD5d5",
       abi: [
         {
-          inputs: [],
+          inputs: [
+            {
+              internalType: "address",
+              name: "_admin",
+              type: "address",
+            },
+          ],
           stateMutability: "nonpayable",
           type: "constructor",
         },
@@ -808,6 +814,19 @@ const deployedContracts = {
           ],
           name: "OwnerWithdraw",
           type: "event",
+        },
+        {
+          inputs: [],
+          name: "admin",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
         },
         {
           inputs: [],
@@ -920,6 +939,19 @@ const deployedContracts = {
             },
           ],
           name: "transferOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_newAdmin",
+              type: "address",
+            },
+          ],
+          name: "updateAdmin",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",

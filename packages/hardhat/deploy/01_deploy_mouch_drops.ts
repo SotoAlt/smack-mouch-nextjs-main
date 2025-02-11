@@ -6,12 +6,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
+  const constructorArg = "0x41f3C185123a4519f30eE1507cfd146e85a59a22";
+
   // Ensure compilation before deployment
   await hre.run("compile");
 
   await deploy("MouchDrops", {
     from: deployer,
-    args: [], // Add constructor arguments here if any
+    args: [constructorArg], // Add constructor arguments here if any
     log: true,
   });
 };
