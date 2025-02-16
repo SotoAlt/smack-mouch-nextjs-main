@@ -1,0 +1,36 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/MouchDrops.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ncontract MouchDrops {\n\taddress public owner;\n\tuint256 public cooldownPeriod = 10 minutes;\n\tuint256 public maxDisbursement = 30 ether;\n\tmapping(address => uint256) public lastRequestTime;\n\n\tevent EtherReceived(address indexed sender, uint256 amount);\n\tevent OwnerWithdraw(address indexed owner, uint256 amount);\n\n\tmodifier onlyOwner() {\n\t\trequire(msg.sender == owner, \"Caller is not the owner\");\n\t\t_;\n\t}\n\n\tconstructor() {\n\t\towner = msg.sender;\n\t}\n\n\treceive() external payable {\n\t\temit EtherReceived(msg.sender, msg.value);\n\t}\n\n\tfunction disburse(\n\t\taddress payable recipient,\n\t\tuint256 amount\n\t) external onlyOwner {\n\t\trequire(recipient != address(0), \"Invalid recipient\");\n\t\trequire(amount > 0 && amount <= maxDisbursement, \"Invalid amount\");\n\t\trequire(\n\t\t\taddress(this).balance >= amount,\n\t\t\t\"Insufficient contract balance\"\n\t\t);\n\t\trequire(\n\t\t\tblock.timestamp >= lastRequestTime[msg.sender] + cooldownPeriod,\n\t\t\t\"Cooldown period not yet expired\"\n\t\t);\n\t\tlastRequestTime[msg.sender] = block.timestamp;\n\n\t\t// ✅ Send Ether to the recipient\n\t\t(bool sent, ) = recipient.call{ value: amount }(\"\");\n\t\trequire(sent, \"Failed to disburse rewards\");\n\t}\n\n\tfunction setCooldownPeriod(uint256 newCooldownPeriod) external onlyOwner {\n\t\tcooldownPeriod = newCooldownPeriod;\n\t}\n\n\tfunction setMaxDisbursement(uint256 newMaxDisbursement) external onlyOwner {\n\t\trequire(\n\t\t\tnewMaxDisbursement > 0,\n\t\t\t\"Max disbursement must be greater than zero\"\n\t\t);\n\t\tmaxDisbursement = newMaxDisbursement;\n\t}\n\n\tfunction withdrawAll() external onlyOwner {\n\t\tuint256 contractBalance = address(this).balance;\n\t\trequire(contractBalance > 0, \"No funds to withdraw\");\n\n\t\t(bool sent, ) = owner.call{ value: contractBalance }(\"\");\n\t\trequire(sent, \"Failed to withdraw funds\");\n\n\t\temit OwnerWithdraw(owner, contractBalance);\n\t}\n\n\tfunction transferOwnership(address newOwner) external onlyOwner {\n\t\trequire(newOwner != address(0), \"New owner cannot be zero address\");\n\t\towner = newOwner;\n\t}\n}\n"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "evmVersion": "paris",
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

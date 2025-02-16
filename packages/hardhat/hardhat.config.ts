@@ -11,8 +11,8 @@ import "hardhat-deploy";
 import "hardhat-deploy-ethers";
 
 // If not set, it uses the hardhat account 0 private key.
-const deployerPrivateKey =
-  process.env.DEPLOYER_PRIVATE_KEY ?? "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+const deployerPrivateKey = process.env.DEPLOYER_PRIVATE_KEY!;
+
 // If not set, it uses ours Etherscan default API key.
 const etherscanApiKey = process.env.ETHERSCAN_API_KEY || "DNXJA8RX2Q3VZ4URQIWP7Z68CJXQZSC6AW";
 // forking rpc url
@@ -33,7 +33,7 @@ const config: HardhatUserConfig = {
       },
     ],
   },
-  defaultNetwork: "sepolia",
+  defaultNetwork: "monadDevnet",
   namedAccounts: {
     deployer: {
       // By default, it will take the first Hardhat account as the deployer
@@ -51,6 +51,11 @@ const config: HardhatUserConfig = {
     },
     mainnet: {
       url: `https://cloudflare-eth.com`,
+      accounts: [deployerPrivateKey],
+    },
+    //Currently, you need to add --api-url <url> to yarn verify for monad devnet
+    monadDevnet: {
+      url: `https://rpc-devnet.monadinfra.com/rpc/3fe540e310bbb6ef0b9f16cd23073b0a`,
       accounts: [deployerPrivateKey],
     },
     sepolia: {
